@@ -1,13 +1,17 @@
 package com.particular.banco.modelo;
 
+import com.particular.banco.modelo.excecao.SaldoInsuficienteException;
+import com.particular.banco.modelo.excecao.ValorMaiorQueZeroException;
+
+import java.math.BigDecimal;
 import java.util.Objects;
 
-public class Conta {
+public abstract class Conta {
 
     private Pessoa titular;
     private int agencia;
     private int numero;
-    private double saldo;
+    private BigDecimal saldo = BigDecimal.ZERO;
 
     public Conta(){
 
@@ -20,6 +24,8 @@ public class Conta {
         this.agencia = agencia;
         this.numero = numero;
     }
+
+    public abstract void debitarTarifaMensal();
 
     public Pessoa getTitular() {
         return titular;
@@ -34,33 +40,37 @@ public class Conta {
         return numero;
     }
 
-    public double getSaldo() {
+    public BigDecimal getSaldo() {
         return saldo;
     }
 
-    public void depositar(double valor){
+    public void depositar(BigDecimal valor){
 
-        if(valor <= 0){
-            throw new IllegalArgumentException("Valor deve ser maior que zero.");
+        if(valor.compareTo(BigDecimal.ZERO) <= 0){
+            throw new ValorMaiorQueZeroException("O valor de depósito deve ser maior que zero.");
         }
-        saldo += valor;
+        saldo = saldo.add(valor);
 
     }
 
-    public void sacar(double valor){
-        if(valor <= 0){
-            throw new IllegalArgumentException("Valor deve ser maior que zero.");
+    public void sacar(BigDecimal valor){
+        if(valor.compareTo(BigDecimal.ZERO) <= 0){
+            throw new ValorMaiorQueZeroException("Valor de saque deve ser maior que zero.");
         }
 
-        if(saldo - valor < 0){
-            throw new IllegalStateException("Saldo insuficiente.");
+        if(getSaldoDisponivel().subtract(valor).compareTo(BigDecimal.ZERO) < 0){
+            throw new SaldoInsuficienteException("Saldo insuficiente.");
         }
-        saldo -= valor;
+        saldo = saldo.subtract(valor);
 
     }
 
-    public void sacar(double valor, double taxa){
-        sacar(valor + taxa);
+    public void sacar(BigDecimal valor, BigDecimal taxa){
+        sacar(valor.add(taxa));
+    }
+
+    public BigDecimal getSaldoDisponivel(){
+        return getSaldo();
     }
 
 
